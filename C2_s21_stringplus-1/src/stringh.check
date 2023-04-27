@@ -1,0 +1,1263 @@
+//#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#include "s21_string.h"
+
+// 1 Ищет первое вхождение символа c (символ без знака)
+// в первых n байтах строки, на которую указывает аргумент str.
+#test memchr_test
+char str1[] = "195555565\0";
+int c = 1;
+int n = 1;
+ck_assert_pstr_eq(s21_memchr(str1, c, n), memchr(str1, c, n));
+char str2[] = "\0";
+int c2 = 88;
+int m2 = 9;
+ck_assert_pstr_eq(s21_memchr(str2, c2, m2), memchr(str2, c2, m2));
+char *empty_string = "\0";
+char *string = "This is a test string!\0";
+ck_assert(memchr(empty_string, 'i', 0) == s21_memchr(empty_string, 'i', 0));
+ck_assert(memchr(string, 'i', 0) == s21_memchr(string, 'i', 0));
+ck_assert(memchr(string, 'i', 20) == s21_memchr(string, 'i', 20));
+ck_assert(memchr(string, 'i', 256) == s21_memchr(string, 'i', 256));
+ck_assert(memchr(string, 'd', 0) == s21_memchr(string, 'd', 0));
+ck_assert(memchr(string, 'd', 15) == s21_memchr(string, 'd', 15));
+ck_assert(memchr(string, 'd', 15) == s21_memchr(string, 'd', 15));
+ck_assert(memchr(string, 128, 0) == s21_memchr(string, 128, 0));
+ck_assert(memchr(string, 115, 15) == s21_memchr(string, 115, 15));
+ck_assert(memchr(string, 0, 15) == s21_memchr(string, 0, 15));
+printf("1 memchr \033[32mOK\n\033[0m");
+
+// 2 Сравнивает первые n байтов строк str1 и str2.
+#test memcmp_test
+char str1[] = "5555565\0";
+char str2[] = "55555\0";
+int n = 9;
+ck_assert_int_eq(s21_memcmp(str1, str2, n), memcmp(str1, str2, n));
+char str3[] = "\0";
+char str4[] = "5fff5555\0";
+int m = 1;
+ck_assert_int_eq(s21_memcmp(str3, str4, m), memcmp(str3, str4, m));
+printf("2 memcmp \033[32mOK\n\033[0m");
+
+// 3 Копирует n символов из src в dest.
+#test memcpy_test
+char dest[] = "\0";
+char src[] = "195555565\0";
+int n = 1;
+ck_assert_pstr_eq(s21_memcpy(dest, src, n), memcpy(dest, src, n));
+char dest3[] = "fff\0";
+char src3[] = "195555565\0";
+int n3 = 5;
+ck_assert_pstr_eq(s21_memcpy(dest3, src3, n3), memcpy(dest3, src3, n3));
+char *memory1 = (char *)calloc(11, sizeof(char));
+char *memory2 = (char *)calloc(11, sizeof(char));
+ck_assert_str_eq(memcpy(memory1, "test", 5), s21_memcpy(memory2, "test", 5));
+ck_assert_str_eq(memcpy(memory1, "WOWWHATTHE", 6),
+                 s21_memcpy(memory2, "WOWWHATTHE", 6));
+ck_assert_str_eq(memcpy(memory1, "\0", 2), s21_memcpy(memory2, "\0", 2));
+ck_assert_str_eq(memcpy(memory1, "i_lov\n_mama_mia", 9),
+                 s21_memcpy(memory2, "i_lov\n_mama_mia", 9));
+ck_assert_str_eq(memcpy(memory1, "abcefghijk", 10),
+                 s21_memcpy(memory2, "abcefghijk", 10));
+ck_assert_str_eq(memcpy(memory1 + 6, memory1, 4),
+                 s21_memcpy(memory2 + 6, memory2, 4));
+ck_assert_str_eq(memcpy(memory1, memory1 + 6, 4),
+                 s21_memcpy(memory2, memory2 + 6, 4));
+ck_assert_str_eq(memcpy(memory1, "ddd", 4), s21_memcpy(memory2, "ddd", 4));
+free(memory1);
+free(memory2);
+printf("3 memcpy \033[32mOK\n\033[0m");
+
+// 4 Еще одна функция для копирования n символов из src в dest.
+#test memmove_test
+char dest[] = "\0";
+char dest2[] = "\0";
+char src[] = "195555565\0";
+int n = 1;
+s21_memmove(dest, src, n);
+memmove(dest2, src, n);
+ck_assert_pstr_eq(dest, dest2);
+char dest3[] = "fff\0";
+char dest4[] = "fff\0";
+char src2[] = "123456\0";
+n = 3;
+s21_memmove(dest3, src2, n);
+memmove(dest4, src2, n);
+ck_assert_pstr_eq(dest3, dest4);
+char *memory1 = (char *)calloc(11, sizeof(char));
+char *memory2 = (char *)calloc(11, sizeof(char));
+ck_assert_str_eq(memmove(memory1, "test", 4), s21_memmove(memory2, "test", 4));
+ck_assert_str_eq(memmove(memory1, memory1 + 2, 8),
+                 s21_memmove(memory2, memory2 + 2, 8));
+ck_assert_str_eq(memmove(memory1 + 2, memory1, 8),
+                 s21_memmove(memory2 + 2, memory2, 8));
+ck_assert_str_eq(memmove(memory1 + 4, memory1, 6),
+                 s21_memmove(memory2 + 4, memory2, 6));
+free(memory1);
+free(memory2);
+printf("4 memmove \033[32mOK\n\033[0m");
+
+// 5 Копирует символ c (беззнаковый char)
+// в первые n символов строки, на которую указывает аргумент str.
+#test memset_test
+char str[] = "Ofkfjgdlk\0";
+int c = 0;
+int n = 5;
+char str2[] = "Ofkfjgdlk\0";
+s21_memset(str, c, n);
+memset(str2, c, n);
+ck_assert_pstr_eq(str, str2);
+int c0 = 'm';
+int c1 = '.';
+int c2 = ' ';
+int c3 = '5';
+int c4 = '\0';
+s21_size_t n0 = 2;
+s21_size_t n1 = 0;
+s21_size_t n2 = 7;
+s21_size_t n3 = 10;
+s21_size_t n4 = 20;
+char test2[10] = "fhwifw";
+char test4[10] = "fhwifw";
+char test5[10] = " woooow";
+char test3[10] = " woooow";
+char test8[30] = "OKITSVERYEASYREALLY";
+char test11[30] = "OKITSVERYEASYREALLY";
+char test7[15] = "Hello school";
+char test10[15] = "Hello school";
+char test9[10] = "123456789";
+char test6[10] = "123456789";
+ck_assert_str_eq(s21_memset(test2, c0, n0), memset(test4, c0, n0));
+ck_assert_str_eq(s21_memset(test3, c1, n1), memset(test5, c1, n1));
+ck_assert_str_eq(s21_memset(test6, c2, n2), memset(test9, c2, n2));
+ck_assert_str_eq(s21_memset(test7, c3, n3), memset(test10, c3, n3));
+ck_assert_str_eq(s21_memset(test8, c4, n4), memset(test11, c4, n4));
+printf("5 memset \033[32mOK\n\033[0m");
+
+// 6 Добавляет строку, на которую указывает src,
+// в конец строки, на которую указывает dest.
+#test strcat_test
+char dest[] = "12\0";
+char dest1[] = "12\0";
+char src[] = "1\0";
+s21_strcat(dest, src);
+strcat(dest1, src);
+ck_assert_pstr_eq(dest, dest1);
+char dest2[] = "\0";
+char dest22[] = "\0";
+char src2[] = "\0";
+s21_strcat(dest2, src2);
+strcat(dest22, src2);
+ck_assert_pstr_eq(dest2, dest22);
+char test1[10] = "fhwifw";
+char test2[10] = " ";
+char test3[10] = "fhwifw";
+char test4[21] = "1234567890";
+char test5[21] = "abcdefghij";
+char test6[21] = "1234567890";
+char test7[21] = "Hello\n";
+char test8[21] = "vbb";
+char test9[21] = "Hello\n";
+char test10[21] = "S";
+char test11[21] = "";
+char test12[21] = "S";
+char test13[21] = "aaaaaHELP";
+char test14[21] = "no\t";
+char test15[21] = "aaaaaHELP";
+ck_assert_str_eq(s21_strcat(test1, test2), strcat(test3, test2));
+ck_assert_str_eq(s21_strcat(test4, test5), strcat(test6, test5));
+ck_assert_str_eq(s21_strcat(test7, test8), strcat(test9, test8));
+ck_assert_str_eq(s21_strcat(test10, test11), strcat(test12, test11));
+ck_assert_str_eq(s21_strcat(test13, test14), strcat(test15, test14));
+printf("6 strcat \033[32mOK\n\033[0m");
+
+// 7 Добавляет строку, на которую указывает src,
+// к концу строки, на которую указывает dest, длиной до n символов.
+#test strncat_test
+char dest[] = "12\0";
+char dest1[] = "12\0";
+char src[] = "1\0";
+int n = 50;
+s21_strncat(dest, src, n);
+strncat(dest1, src, n);
+ck_assert_pstr_eq(dest, dest1);
+char dest2[] = "\0";
+char dest22[] = "\0";
+char src2[] = "\0";
+n = 5;
+s21_strncat(dest2, src2, n);
+strncat(dest22, src2, n);
+ck_assert_pstr_eq(dest2, dest22);
+int n1 = 5;
+int n2 = 10;
+int n3 = 5;
+int n4 = 2;
+char test1[21] = "fhwifwdd";
+char test2[10] = " ";
+char test3[21] = "fhwifwdd";
+char test4[21] = "1234567890";
+char test5[21] = "abcdefghij";
+char test6[21] = "1234567890";
+char test7[21] = "Helloschool\n";
+char test8[21] = "vbbnn";
+char test9[21] = "Helloschool\n";
+char test10[21] = "S";
+char test11[21] = "\n";
+char test12[21] = "S";
+ck_assert_str_eq(s21_strncat(test1, test2, n1), strncat(test3, test2, n1));
+ck_assert_str_eq(s21_strncat(test4, test5, n2), strncat(test6, test5, n2));
+ck_assert_str_eq(s21_strncat(test7, test8, n3), strncat(test9, test8, n3));
+ck_assert_str_eq(s21_strncat(test10, test11, n4), strncat(test12, test11, n4));
+printf("7 strncat \033[32mOK\n\033[0m");
+
+// 8 Ищет первое вхождение символа
+// c (unsigned char) в строке, на которую указывает аргумент str.
+#test strchr_test
+char str[] = "Ofkfjgdlk\0";
+int c = 0;
+ck_assert_pstr_eq(s21_strchr(str, c), strchr(str, c));
+char str2[] = "Ofkfjgdlk\0";
+int c2 = 79;
+ck_assert_pstr_eq(s21_strchr(str2, c2), strchr(str2, c2));
+int c0 = 'p';
+int c1 = 'l';
+int c4 = '\n';
+int c3 = '_';
+char test1[10] = "fhwifw";
+char test2[30] = "this_is_test_for_c";
+char test3[21] = "peer to peer\n";
+char test4[21] = " helloschool21";
+ck_assert_ptr_eq(s21_strchr(test1, c0), strchr(test1, c0));
+ck_assert_ptr_eq(s21_strchr(test3, c4), strchr(test3, c4));
+ck_assert_str_eq(s21_strchr(test2, c3), strchr(test2, c3));
+ck_assert_str_eq(s21_strchr(test4, c1), strchr(test4, c1));
+printf("8 strchr \033[32mOK\n\033[0m");
+
+// 9 Сравнивает строку, на которую указывает str1,
+// со строкой, на которую указывает str2.
+#test strcmp_test
+char str11[] = "55555665\0";
+char str21[] = "55555665\0";
+ck_assert_int_eq(s21_strcmp(str11, str21), strcmp(str11, str21));
+char str1[20] = "Hello world\0";
+char str2[20] = "Hello world\n\0";
+char str3[20] = "a\n\0";
+char str4[20] = " \n\0";
+char str5[20] = " \0";
+char str6[20] = "\n\0";
+char str7[20] = "\0";
+char str8[20] = "Hello world\0";
+char str9[20] = "Helloworld\0";
+ck_assert_int_eq(s21_strcmp(str1, str8), strcmp(str1, str8));
+ck_assert_int_le(s21_strcmp(str1, str2), strcmp(str1, str2));
+ck_assert_int_le(s21_strcmp(str1, str3), strcmp(str1, str3));
+ck_assert_int_ge(s21_strcmp(str4, str5), strcmp(str4, str5));
+ck_assert_int_ge(s21_strcmp(str6, str7), strcmp(str6, str7));
+ck_assert_int_le(s21_strcmp(str1, str9), strcmp(str1, str9));
+printf("9 strcmp \033[32mOK\n\033[0m");
+
+// 10 Сравнивает не более первых n байт строк str1 и str2.
+#test strncmp_test
+char str10[] = "123\0";
+char str20[] = "12\0";
+int n = 1;
+int i = s21_strncmp(str10, str20, n);
+int i2 = strncmp(str10, str20, n);
+ck_assert_int_eq(i, i2);
+char str11[] = "33\0";
+char str22[] = "\0";
+n = 0;
+i = s21_strncmp(str11, str22, n);
+i2 = strncmp(str22, str22, n);
+ck_assert_int_eq(i, i2);
+char str1[20] = "Hello world\n\0";
+char str2[20] = "Hello world\0";
+char str4[20] = " \n\0";
+char str5[20] = " \0";
+char str6[20] = "\n\0";
+char str7[20] = "\0";
+char str9[20] = "Helloworld\0";
+ck_assert_int_eq(s21_strncmp(str1, str2, 11), strncmp(str1, str2, 11));
+ck_assert_int_eq(s21_strncmp(str1, str9, 5), strncmp(str1, str9, 5));
+ck_assert_int_le(s21_strncmp(str1, str9, 7), strncmp(str1, str9, 7));
+ck_assert_int_ge(s21_strncmp(str4, str5, 2), strncmp(str4, str5, 2));
+ck_assert_int_ge(s21_strncmp(str6, str7, 20), strncmp(str6, str7, 20));
+ck_assert_int_ge(s21_strncmp(str1, str2, 20), strncmp(str1, str2, 20));
+printf("10 strncmp \033[32mOK\n\033[0m");
+
+// 11 Копирует строку, на которую указывает src, в dest.
+#test strcpy_test
+char dest[] = "12\0";
+char dest1[] = "12\0";
+char src[] = "1\0";
+s21_strcpy(dest, src);
+strcpy(dest1, src);
+ck_assert_pstr_eq(dest, dest1);
+char dest2[] = "\0";
+char dest22[] = "\0";
+char src2[] = "\0";
+s21_strcpy(dest2, src2);
+strcpy(dest22, src2);
+ck_assert_pstr_eq(dest2, dest22);
+char strt1[20] = "Hello world\n\0";
+char strt2[20] = "Hello world\n\0";
+char strt3[20] = "\n\0";
+char strt4[20] = "\n\0";
+char strt5[20] = "Hello\0world\0";
+char strt6[20] = "Hello\0world\0";
+char strt7[20] = "Hello world\0";
+char strt8[20] = "Hello world\0";
+char strt9[20] = "Hello world\0";
+char strt10[20] = "Hello world\0";
+char str1[20] = "Helloworld\0";
+char str2[20] = "Hello world\0";
+char str3[20] = "\0";
+s21_strcpy(strt1, str1);
+strcpy(strt2, str1);
+s21_strcpy(strt3, str1);
+strcpy(strt4, str1);
+s21_strcpy(strt5, str2);
+strcpy(strt6, str2);
+s21_strcpy(strt7, str2);
+strcpy(strt8, str2);
+s21_strcpy(strt9, str3);
+strcpy(strt10, str3);
+ck_assert_str_eq(strt1, strt2);
+ck_assert_str_eq(strt3, strt4);
+ck_assert_str_eq(strt5, strt6);
+ck_assert_str_eq(strt7, strt8);
+ck_assert_str_eq(strt9, strt10);
+printf("11 strcpy \033[32mOK\n\033[0m");
+
+// 12 Копирует до n символов из строки, на которую указывает src, в dest.
+#test strncpy_test
+char dest2[] = "4\0";
+char dest22[] = "4\0";
+char src2[] = "44\0";
+int n = 2;
+s21_strncpy(dest2, src2, n);
+strncpy(dest22, src2, n);
+ck_assert_pstr_eq(dest2, dest22);
+char strt1[20] = "Hellogworld\n\0";
+char strt2[20] = "Hellogworld\n\0";
+char strt3[20] = "\n\0";
+char strt4[20] = "\n\0";
+char strt5[20] = "Hello\0world\0";
+char strt6[20] = "Hello\0world\0";
+char strt7[20] = "Hello world\0";
+char strt8[20] = "Hello world\0";
+char str1[20] = "Hello world\0";
+char str2[20] = "Helloworld\0";
+char str3[20] = "\0";
+s21_strncpy(strt1, str1, 6);
+strncpy(strt2, str1, 6);
+s21_strncpy(strt3, str1, 10);
+strncpy(strt4, str1, 10);
+s21_strncpy(strt5, str2, 11);
+strncpy(strt6, str2, 11);
+s21_strncpy(strt7, str3, 20);
+strncpy(strt8, str3, 20);
+ck_assert_str_eq(strt1, strt2);
+ck_assert_str_eq(strt3, strt4);
+ck_assert_str_eq(strt5, strt6);
+ck_assert_str_eq(strt7, strt8);
+printf("12 strncpy \033[32mOK\n\033[0m");
+
+// 13 Вычисляет длину начального сегмента строки str1,
+// полностью состоящего из символов, не входящих в строку str2.
+#test strcspn_test
+char str10[] = "12\0";
+char str110[] = "12\0";
+char str20[] = "1\0";
+ck_assert_int_eq(s21_strcspn(str10, str20), strcspn(str110, str20));
+char str30[] = "222\0";
+char str330[] = "222\0";
+char str40[] = "1222\0";
+ck_assert_int_eq(s21_strcspn(str30, str40), strcspn(str330, str40));
+char strt1[20] = "Hellogworld\n\0";
+char strt2[20] = "Hellogworld\n\0";
+char strt3[20] = "\n\0";
+char strt4[20] = "\n\0";
+char strt5[20] = "Hello\0world\0";
+char strt6[20] = "Hello\0world\0";
+char strt7[20] = "Hello world\0";
+char strt8[20] = "Hello world\0";
+char str1[20] = "Hello world\0";
+char str2[20] = "Helloworld\0";
+char str3[20] = "\0";
+s21_strncpy(strt1, str1, 6);
+strncpy(strt2, str1, 6);
+s21_strncpy(strt3, str1, 10);
+strncpy(strt4, str1, 10);
+s21_strncpy(strt5, str2, 11);
+strncpy(strt6, str2, 11);
+s21_strncpy(strt7, str3, 20);
+strncpy(strt8, str3, 20);
+ck_assert_str_eq(strt1, strt2);
+ck_assert_str_eq(strt3, strt4);
+ck_assert_str_eq(strt5, strt6);
+ck_assert_str_eq(strt7, strt8);
+printf("13 strcspn \033[32mOK\n\033[0m");
+
+// 14 Ищет во внутреннем массиве номер ошибки errnum
+// и возвращает указатель на строку сообщения об ошибке.
+// Вам нужно объявить макросы, содержащие массивы сообщений
+// об ошибках для операционных систем Mac и Linux.
+// Описания ошибок доступны в оригинальной библиотеке.
+// Проверка текущей ОС осуществляется с помощью директив.
+#test strerror_test
+int i;
+for (i = -5; i < S21_ERRLIST_SIZE; i++) {
+  ck_assert_pstr_eq(s21_strerror(i), strerror(i));
+}
+s21_strerror(110);
+
+printf("14 strerror \033[32mOK\n\033[0m");
+
+// 15 вычисляет длину строки (не включая 0)
+#test strlen_test
+char str[] = "102345\0";
+ck_assert_int_eq(s21_strlen(str), strlen(str));
+char str1[] = "ffevfghyj\0";
+ck_assert_int_eq(s21_strlen(str1), strlen(str1));
+char str2[] = "";
+ck_assert_int_eq(s21_strlen(str2), strlen(str2));
+char str3[] = " ";
+ck_assert_int_eq(s21_strlen(str3), strlen(str3));
+printf("15 strlen \033[32mOK\n\033[0m");
+
+// 16 Находит первый символ в строке str1, который соответствует любому символу,
+// указанному в str2
+#test strpbrk_test
+char str1[] = "5555565\0";
+char str2[] = "6\0";
+ck_assert_pstr_eq(s21_strpbrk(str1, str2), strpbrk(str1, str2));
+char str3[] = "fffgthfff\0";
+char str4[] = "tf\0";
+ck_assert_pstr_eq(s21_strpbrk(str3, str4), strpbrk(str3, str4));
+char str5[] = "fffffff\0";
+char str6[] = "t\0";
+ck_assert_pstr_eq(s21_strpbrk(str5, str6), strpbrk(str5, str6));
+printf("16 strpbrk \033[32mOK\n\033[0m");
+
+// 17 Выполняет поиск последнего вхождения символа c (беззнаковый тип) в строке,
+// на которую указывает аргумент str
+#test strrchr_test
+int c = 99;
+char str1[] = "dfcvgf\0";
+ck_assert_pstr_eq(s21_strrchr(str1, c), strrchr(str1, c));
+char str2[] = "dfvgf\0";
+ck_assert_pstr_eq(s21_strrchr(str2, c), strrchr(str2, c));
+char str3[] = "\0";
+ck_assert_pstr_eq(s21_strrchr(str3, c), strrchr(str2, c));
+printf("17 strrchr \033[32mOK\n\033[0m");
+
+// 18 Вычисляет длину начального сегмента str1, который полностью состоит из
+// символов str2
+#test strspn_test
+char str1[] = "55555665\0";
+char str2[] = "66\0";
+ck_assert_int_eq(s21_strspn(str1, str2), strspn(str1, str2));
+char str5[] = "fggtttt\0";
+char str6[] = "tttt\0";
+ck_assert_int_eq(s21_strspn(str5, str6), strspn(str5, str6));
+char str3[] = "fggtttt\0";
+char str4[] = "\0";
+ck_assert_int_eq(s21_strspn(str3, str4), strspn(str3, str4));
+ck_assert_int_eq(s21_strspn(str4, str3), strspn(str4, str3));
+printf("18 strspn \033[32mOK\n\033[0m");
+
+// 19 Находит первое вхождение всей строки needle (не включая завершающий
+// нулевой символ), которая появляется в строке haystack
+#test strstr_test
+char haystack1[] = "5555565\0";
+char needle1[] = "55555\0";
+ck_assert_pstr_eq(s21_strstr(haystack1, needle1), strstr(haystack1, needle1));
+char haystack2[] = "fffgthfff\0";
+char needle2[] = "tf\0";
+ck_assert_pstr_eq(s21_strstr(haystack2, needle2), strstr(haystack2, needle2));
+char haystack3[] = "fffffff\0";
+char needle3[] = "t\0";
+ck_assert_pstr_eq(s21_strstr(haystack3, needle3), strstr(haystack3, needle3));
+char haystack4[] = "fffffff\0";
+char needle4[] = "\0";
+ck_assert_pstr_eq(s21_strstr(haystack4, needle4), strstr(haystack4, needle4));
+printf("19 strstr \033[32mOK\n\033[0m");
+
+// 20 Разбивает строку str на ряд токенов, разделенных delim
+#test strtok_test
+char str1[] = "dfc - vgf\0";
+ck_assert_pstr_eq(s21_strtok(str1, "-"), strtok(str1, "-"));
+char str2[] = "dfvgf\0";
+ck_assert_pstr_eq(s21_strtok(str2, "-"), strtok(str2, "-"));
+char str3[] = "\0";
+ck_assert_pstr_eq(s21_strtok(str3, "-"), strtok(str3, "-"));
+printf("20 strtok \033[32mOK\n\033[0m");
+
+// 21 SRPINTF_C
+#test test_s21_sprintf_c
+char str[2048];
+char str_s21[2048];
+char c = 'd';
+
+int res = sprintf(str, "%c", c);
+int res_s21 = s21_sprintf(str_s21, "%c", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("21 sprintf_c \033[32mOK\n\033[0m");
+
+// 22.1 SRPINTF_D+
+#test test_s21_sprintf_d_plus
+// char *format = "%d: %21d: %-21d: %+21d: %-21.12d: %21.12d: %   d:";
+char str[2048];
+char str_s21[2048];
+int c = 21;
+// int res = sprintf(str, format, c, c, c, c, c, c, c);
+// int res_s21 = s21_sprintf(str_s21, format, c, c, c, c, c, c, c);
+int res = sprintf(str, "%d", c);
+int res_s21 = s21_sprintf(str_s21, "%d", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("22.1 sprintf_d_plus \033[32mOK\n\033[0m");
+
+// 22.2 SRPINTF_D0
+#test test_s21_sprintf_d_null
+char str[2048];
+char str_s21[2048];
+int c = 0;
+int res = sprintf(str, "%d", c);
+int res_s21 = s21_sprintf(str_s21, "%d", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("22.2 sprintf_d_null \033[32mOK\n\033[0m");
+
+// 22.3 SRPINTF_D-
+#test test_s21_sprintf_d_minus
+char str[2048];
+char str_s21[2048];
+int c = -21;
+int res = sprintf(str, "%d", c);
+int res_s21 = s21_sprintf(str_s21, "%d", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("22.3 sprintf_d_minus \033[32mOK\n\033[0m");
+
+// 22.4 SRPINTF_LD
+#test test_s21_sprintf_d_long_int
+char str[2048];
+char str_s21[2048];
+long int c = 123;
+int res = sprintf(str, "%ld", c);
+int res_s21 = s21_sprintf(str_s21, "%ld", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("22.4 sprintf_d_long_int \033[32mOK\n\033[0m");
+
+// 22.5 SRPINTF_HD
+#test test_s21_sprintf_d_short_int
+char str[2048];
+char str_s21[2048];
+short int c = 123;
+int res = sprintf(str, "%hd", c);
+int res_s21 = s21_sprintf(str_s21, "%hd", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("22.5 sprintf_d_short_int \033[32mOK\n\033[0m");
+
+// 23 SRPINTF_I
+#test test_s21_sprintf_i
+char str[2048];
+char str_s21[2048];
+char c = 8;
+int res = sprintf(str, "%i", c);
+int res_s21 = s21_sprintf(str_s21, "%i", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("23 sprintf_i \033[32mOK\n\033[0m");
+
+// 24 SRPINTF_f
+#test test_s21_sprintf_f
+char str[2048];
+char str_s21[2048];
+double c = 123.456;
+int res = sprintf(str, "%f", c);
+int res_s21 = s21_sprintf(str_s21, "%f", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("24 sprintf_f \033[32mOK\n\033[0m");
+
+// 25 SRPINTF_f_tochnoct
+#test test_s21_sprintf_f_tochnoct
+char str[2048];
+char str_s21[2048];
+double c = 123.456;
+int res = sprintf(str, "%.2f", c);
+int res_s21 = s21_sprintf(str_s21, "%.2f", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("25 sprintf_f_tochnoct \033[32mOK\n\033[0m");
+
+// 26 SRPINTF_s
+#test test_s21_sprintf_s
+char str[2048];
+char str_s21[2048];
+char c[13] = "Hello world!";
+int res = sprintf(str, "%s", c);
+int res_s21 = s21_sprintf(str_s21, "%s", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("26 sprintf_s \033[32mOK\n\033[0m");
+
+// 27 SRPINTF_u
+#test test_s21_sprintf_u
+char str[2048];
+char str_s21[2048];
+unsigned int c = 123.456;
+int res = sprintf(str, "%u", c);
+int res_s21 = s21_sprintf(str_s21, "%u", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("27 sprintf_u \033[32mOK\n\033[0m");
+
+// 28 SRPINTF_D_sdvig_vpravo
+#test test_s21_sprintf_d_sdvig_vpravo
+char str[2048];
+char str_s21[2048];
+int c = 21;
+int res = sprintf(str, "%6d", c);
+int res_s21 = s21_sprintf(str_s21, "%6d", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("28 sprintf_d_sdvig_vpravo \033[32mOK\n\033[0m");
+
+// 29 SRPINTF_D_sdvig_vlevo
+#test test_s21_sprintf_d_sdvig_vlevo
+char str[2048];
+char str_s21[2048];
+int c = 21;
+int res = sprintf(str, "%-6d", c);
+int res_s21 = s21_sprintf(str_s21, "%-6d", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("29 sprintf_d_sdvig_vlevo \033[32mOK\n\033[0m");
+
+// 30 SRPINTF_D_tochnost
+#test test_s21_sprintf_d_tochnost
+char str[2048];
+char str_s21[2048];
+int c = 213;
+int res = sprintf(str, "%.6d", c);
+int res_s21 = s21_sprintf(str_s21, "%.6d", c);
+ck_assert_pstr_eq(str, str_s21);
+ck_assert_int_eq(res, res_s21);
+printf("30 sprintf_d_tochnost \033[32mOK\n\033[0m");
+
+// 31 INSERT
+#test test_insert
+char src[] = "Hello, ";
+char str[] = "Aboba!";
+s21_size_t index = 0;
+char res[] = "Hello, Aboba!";
+char *s21_res = (char *)s21_insert(src, str, index);
+ck_assert_str_eq(s21_res, res);
+if (s21_res) free(s21_res);
+printf("31 test_insert \033[32mOK\n\033[0m");
+
+// 32 TRIM
+#test test_trim
+char src[] = "*123*";
+char trim_ch[] = "*";
+char res[] = "123";
+char *s21_res = s21_trim(src, trim_ch);
+ck_assert_str_eq(s21_res, res);
+if (s21_res) free(s21_res);
+printf("32 test_trim \033[32mOK\n\033[0m");
+
+#test s21_sprintf_c_1
+char c = 'c';
+char str1[80] = "1";
+char str2[80] = "2";
+char format[5] = "%c";
+sprintf(str1, format, c);
+s21_sprintf(str2, format, c);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_c_1 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_c_2
+char c = 'c';
+char str1[80] = "1";
+char str2[80] = "2";
+char format2[50] = "%60c";
+sprintf(str1, format2, c);
+s21_sprintf(str2, format2, c);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_c_2 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_c_3
+char c = 'c';
+char str1[80] = "1";
+char str2[80] = "2";
+char format3[5] = "%%c";
+sprintf(str1, format3, c);
+s21_sprintf(str2, format3, c);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_c_3 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_c_4
+char c = 'c';
+int n = 1;
+char str1[80] = "1";
+char str2[80] = "2";
+char format4[50] = "%-20c";
+sprintf(str1, format4, c, n);
+s21_sprintf(str2, format4, c, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_c_4 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_c_5
+char c = 'c';
+char str1[80] = "1";
+char str2[80] = "2";
+char format5[50] = "%0c";
+sprintf(str1, format5, c);
+s21_sprintf(str2, format5, c);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_c_5 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_c_6
+char c = 'c';
+char str1[80] = "1";
+char str2[80] = "2";
+char format6[50] = "%2c";
+sprintf(str1, format6, c);
+s21_sprintf(str2, format6, c);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_c_6 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_c_7
+char c = 'c';
+char str1[80] = "1";
+char str2[80] = "2";
+char format6[50] = "%+c";
+sprintf(str1, format6, c);
+s21_sprintf(str2, format6, c);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_c_7 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_c_8
+char c = 'c';
+char str1[80] = "1";
+char str2[80] = "2";
+char format6[5] = "%c%d";
+sprintf(str1, format6, c, 36);
+s21_sprintf(str2, format6, c, 36);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_c_8 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_c_9
+char c = 'c';
+char str1[80] = "1";
+char str2[80] = "2";
+char format9[5] = "%.1c";
+sprintf(str1, format9, c);
+s21_sprintf(str2, format9, c);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_c_9 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_c_10
+char c = 'c';
+char s = 's';
+char str1[80] = "14";
+char str2[80] = "26";
+char format10[15] = "%c%c";
+sprintf(str1, format10, c, s);
+s21_sprintf(str2, format10, c, s);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_c_10 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_s_1
+char s[10] = "hello";
+char str1[80] = "1";
+char str2[80] = "2";
+char format[80] = "%s";
+sprintf(str1, format, s);
+s21_sprintf(str2, format, s);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_s_1 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_s_2
+char s[10] = "hello";
+char str1[80] = "1";
+char str2[80] = "2";
+char format2[50] = "%78s";
+sprintf(str1, format2, s);
+s21_sprintf(str2, format2, s);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_s_2 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_s_3
+char s[10] = "hello";
+char str1[80] = "1";
+char str2[80] = "2";
+char format3[50] = "%%s";
+sprintf(str1, format3, s);
+s21_sprintf(str2, format3, s);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_s_3 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_s_4
+char s[10] = "hello";
+int n = 1;
+char str1[80] = "1";
+char str2[80] = "2";
+char format4[50] = "%-20s";
+sprintf(str1, format4, s, n);
+s21_sprintf(str2, format4, s, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_s_4 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_s_5
+char s[10] = "hello";
+char str1[80] = "1";
+char str2[80] = "2";
+char format5[50] = "%0s";
+sprintf(str1, format5, s);
+s21_sprintf(str2, format5, s);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_s_5 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_s_6
+char s[10] = "hello";
+char str1[80] = "1";
+char str2[80] = "2";
+char format6[5] = "%s%s";
+sprintf(str1, format6, s, s);
+s21_sprintf(str2, format6, s, s);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_s_6 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_s_7
+char s[10] = "hello";
+char str1[80] = "1";
+char str2[80] = "2";
+char format7[5] = "%.1s";
+sprintf(str1, format7, s);
+s21_sprintf(str2, format7, s);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_s_7 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_s_8
+char s[10] = "hello";
+char str1[80] = "1";
+char str2[80] = "2";
+char format8[5] = "% s";
+sprintf(str1, format8, s);
+s21_sprintf(str2, format8, s);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_s_8 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_s_9
+char s[50] = "qwerty";
+char str1[80] = "1";
+char str2[80] = "2";
+char format9[10] = "%8.3s";
+sprintf(str1, format9, s);
+s21_sprintf(str2, format9, s);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_s_9 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_d_1
+int i = 1234567890;
+char str1[80] = "1";
+char str2[80] = "2";
+char format[80] = "%5d";
+sprintf(str1, format, 4, i);
+s21_sprintf(str2, format, 4, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_d_1 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_d_2
+int i = 987654321;
+char str1[80] = "1";
+char str2[80] = "2";
+char format2[5] = "% d";
+sprintf(str1, format2, 4, i);
+s21_sprintf(str2, format2, 4, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_d_2 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_d_3
+int i = 1234567890;
+char str1[80] = "1";
+char str2[80] = "2";
+char format3[10] = "%-10d";
+sprintf(str1, format3, i);
+s21_sprintf(str2, format3, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_d_3 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_d_4
+int i = 987654321;
+int n = 1;
+char str1[80] = "1";
+char str2[80] = "2";
+char format4[5] = "%+d";
+sprintf(str1, format4, i, n);
+s21_sprintf(str2, format4, i, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_d_4 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_d_5
+int i = 987654321;
+char str1[80] = "1";
+char str2[80] = "2";
+char format5[100] = "%0d";
+sprintf(str1, format5, i);
+s21_sprintf(str2, format5, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_d_5 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_d_6
+int i = 987654321;
+char str1[80] = "1";
+char str2[80] = "2";
+char format6[100] = "%d%d";
+sprintf(str1, format6, i, i);
+s21_sprintf(str2, format6, i, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_d_6 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_d_7
+int i = 0;
+char str1[80] = "1";
+char str2[80] = "2";
+char format7[5] = "%.9d";
+sprintf(str1, format7, i);
+s21_sprintf(str2, format7, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_d_7 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_d_8
+int i = 6987;
+char str1[80] = "1";
+char str2[80] = "2";
+char format8[5] = "%hd";
+sprintf(str1, format8, i);
+s21_sprintf(str2, format8, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_d_8 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_d_9
+int i = 6987343;
+char str1[80] = "1";
+char str2[80] = "2";
+char format9[5] = "%ld";
+sprintf(str1, format9, i);
+s21_sprintf(str2, format9, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_d_9 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_d_10
+int i = 6987343;
+char str1[80] = "1";
+char str2[80] = "2";
+char format10[50] = "%-20d";
+sprintf(str1, format10, i);
+s21_sprintf(str2, format10, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_d_10 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_i_1
+int i = 1234567890;
+char str1[80] = "1";
+char str2[80] = "2";
+char format[5] = "%5i";
+sprintf(str1, format, 4, i);
+s21_sprintf(str2, format, 4, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_i_1 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_i_2
+int i = 987654321;
+char str1[80] = "1";
+char str2[80] = "2";
+char format2[5] = "%i";
+sprintf(str1, format2, 4, i);
+s21_sprintf(str2, format2, 4, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_i_2 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_i_3
+int i = 1234567890;
+char str1[80] = "1";
+char str2[80] = "2";
+char format3[10] = "%-10i";
+sprintf(str1, format3, i);
+s21_sprintf(str2, format3, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_i_3 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_i_4
+int i = 987654321;
+int n = 1;
+char str1[80] = "1";
+char str2[80] = "2";
+char format4[5] = "%+3i";
+sprintf(str1, format4, i, n);
+s21_sprintf(str2, format4, i, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_i_4 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_i_5
+int i = 987654321;
+char str1[80] = "1";
+char str2[80] = "2";
+char format5[100] = "%0i";
+sprintf(str1, format5, i);
+s21_sprintf(str2, format5, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_i_5 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_i_6
+int i = 987654321;
+char str1[80] = "1";
+char str2[80] = "2";
+char format6[100] = "%i%i";
+sprintf(str1, format6, i, i);
+s21_sprintf(str2, format6, i, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_i_6 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_i_7
+int i = 987654;
+char str1[80] = "1";
+char str2[80] = "2";
+char format7[100] = "%hi";
+sprintf(str1, format7, i);
+s21_sprintf(str2, format7, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_i_7 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_i_8
+int i = 98765432;
+char str1[80] = "1";
+char str2[80] = "2";
+char format8[100] = "%li";
+sprintf(str1, format8, i);
+s21_sprintf(str2, format8, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_i_8 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_i_9
+int i = -98765432;
+char str1[80] = "1";
+char str2[80] = "2";
+char format9[100] = "%-30i";
+sprintf(str1, format9, i);
+s21_sprintf(str2, format9, i);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_i_9 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_u_1
+unsigned int u = 1234567890;
+char str1[80] = "1";
+char str2[80] = "2";
+char format[5] = "%u";
+sprintf(str1, format, 4, u);
+s21_sprintf(str2, format, 4, u);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_u_1 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_u_2
+unsigned int u = 0;
+char str1[80] = "1";
+char str2[80] = "2";
+char format2[5] = "%u";
+sprintf(str1, format2, u);
+s21_sprintf(str2, format2, u);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_u_2 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_u_3
+unsigned int u = 1234567890;
+char str1[80] = "1";
+char str2[80] = "2";
+char format3[10] = "%-10u";
+sprintf(str1, format3, u);
+s21_sprintf(str2, format3, u);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_u_3 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_u_4
+unsigned int u = 987654321;
+int n = 1;
+char str1[80] = "1";
+char str2[80] = "2";
+char format4[5] = "%+3u";
+sprintf(str1, format4, u, n);
+s21_sprintf(str2, format4, u, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_u_4 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_u_5
+unsigned int u = 987654321;
+char str1[80] = "1";
+char str2[80] = "2";
+char format5[100] = "%0u";
+sprintf(str1, format5, u);
+s21_sprintf(str2, format5, u);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_u_5 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_u_6
+unsigned int u = 987654321;
+char str1[80] = "1";
+char str2[80] = "2";
+char format6[100] = "%u%u";
+sprintf(str1, format6, u, u);
+s21_sprintf(str2, format6, u, u);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_u_6 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_u_7
+unsigned int u = 9876541;
+char str1[80] = "1";
+char str2[80] = "2";
+char format7[100] = "%hu";
+sprintf(str1, format7, u);
+s21_sprintf(str2, format7, u);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_u_7 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_u_8
+unsigned int u = 987654321;
+char str1[80] = "1";
+char str2[80] = "2";
+char format8[100] = "%lu";
+sprintf(str1, format8, u);
+s21_sprintf(str2, format8, u);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_u_8 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_u_9
+unsigned int u = 5;
+char str1[80] = "1";
+char str2[80] = "2";
+char format9[100] = "%.5u";
+sprintf(str1, format9, u);
+s21_sprintf(str2, format9, u);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_u_9 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_f_1
+float n = 0.41;
+char str1[80] = "1";
+char str2[80] = "2";
+char format[10] = "%f";
+sprintf(str1, format, n);
+s21_sprintf(str2, format, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_f_1 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_f_2
+float f = 1.234567;
+char str1[80] = "1";
+char str2[80] = "2";
+char format2[10] = "%4f";
+sprintf(str1, format2, f);
+s21_sprintf(str2, format2, f);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_f_2 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_f_3
+float n = 0.42;
+char str1[80] = "1";
+char str2[80] = "2";
+char format3[10] = "%+2f";
+sprintf(str1, format3, n);
+s21_sprintf(str2, format3, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_f_3 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_f_4
+float f = 1.234567;
+char str1[80] = "1";
+char str2[80] = "2";
+char format4[10] = "%-5f";
+sprintf(str1, format4, f);
+s21_sprintf(str2, format4, f);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_f_4 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_f_5
+float n = 20.245;
+char str1[80] = "1";
+char str2[80] = "2";
+char format5[10] = "%.0lf";
+sprintf(str1, format5, n);
+s21_sprintf(str2, format5, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_f_5 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_f_7
+float n = 0.0;
+char str1[80] = "1";
+char str2[80] = "2";
+char format7[10] = "%f";
+sprintf(str1, format7, n);
+s21_sprintf(str2, format7, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_f_7 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_f_8
+float n = 1.99;
+char str1[80] = "1";
+char str2[80] = "2";
+char format8[10] = "%.f";
+sprintf(str1, format8, n);
+s21_sprintf(str2, format8, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_f_8 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_f_9
+float f = 2.345;
+char str1[80] = "1";
+char str2[80] = "2";
+char format9[10] = "%.0000f";
+sprintf(str1, format9, f);
+s21_sprintf(str2, format9, f);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_f_9 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_f_10
+float n = 0.1234;
+char str1[80] = "1";
+char str2[80] = "2";
+char format10[10] = "%f";
+sprintf(str1, format10, n);
+s21_sprintf(str2, format10, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_f_10 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_f_11
+float n = 120.24847474;
+char str1[80] = "1";
+char str2[80] = "2";
+char format11[10] = "%2.1lf";
+sprintf(str1, format11, n);
+s21_sprintf(str2, format11, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_f_11 \033[32mOK\n\033[0m");
+
+#test s21_sprintf_f_13
+double n = -5.1;
+char str1[80] = "1";
+char str2[80] = "2";
+char format[10] = "%.3lf";
+sprintf(str1, format, n);
+s21_sprintf(str2, format, n);
+ck_assert_str_eq(str1, str2);
+printf("sprintf_f_12 \033[32mOK\n\033[0m");
